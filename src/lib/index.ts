@@ -1,8 +1,29 @@
 import { connect, NatsConnection, StringCodec } from 'nats';
 
 // re-export all types for external use
-
 export * from '../types';
+export type {
+    ModuleName,
+    ActionForModule,
+    ValidPermission,
+    PermissionSchema,
+    PermissionKey,
+    CachedPermissions
+} from '../types';
+
+import {
+    ModuleName,
+    ActionForModule,
+    GrantRequest,
+    RevokeRequest,
+    CheckRequest,
+    ListRequest,
+    GrantResponse,
+    RevokeResponse,
+    CheckResponse,
+    ListResponse,
+    ErrorResponse
+} from '../types';
 
 export class PermissionsClient {
     private nc: NatsConnection;
@@ -18,7 +39,12 @@ export class PermissionsClient {
         return new PermissionsClient(nc);
     }
 
-    async grant(apiKey: string, module: string, action: string) {
+    // all methods are not type safe
+    async grant<T extends ModuleName>(
+        apiKey: string,
+        module: T,
+        action: ActionForModule<T>
+    ): Promise<GrantResponse | ErrorResponse> {
         const response = await this.nc.request(
             'permissions.grant',
             this.sc.encode(JSON.stringify({ apiKey, module, action }))
@@ -26,7 +52,11 @@ export class PermissionsClient {
         return JSON.parse(this.sc.decode(response.data));
     }
 
-    async revoke(apiKey: string, module: string, action: string) {
+    async revoke<T extends ModuleName>(
+        apiKey: string,
+        module: T,
+        action: ActionForModule<T>
+    ): Promise<RevokeResponse | ErrorResponse> {
         const response = await this.nc.request(
             'permissions.revoke',
             this.sc.encode(JSON.stringify({ apiKey, module, action }))
@@ -34,7 +64,11 @@ export class PermissionsClient {
         return JSON.parse(this.sc.decode(response.data));
     }
 
-    async check(apiKey: string, module: string, action: string) {
+    async check<T extends ModuleName>(
+        apiKey: string,
+        module: T,
+        action: ActionForModule<T>
+    ): Promise<CheckResponse | ErrorResponse> {
         const response = await this.nc.request(
             'permissions.check',
             this.sc.encode(JSON.stringify({ apiKey, module, action }))
@@ -42,7 +76,7 @@ export class PermissionsClient {
         return JSON.parse(this.sc.decode(response.data));
     }
 
-    async list(apiKey: string) {
+    async list(apiKey: string): Promise<ListResponse | ErrorResponse> {
         const response = await this.nc.request(
             'permissions.list',
             this.sc.encode(JSON.stringify({ apiKey }))
@@ -55,12 +89,12 @@ export class PermissionsClient {
     }
 }
 
-export async function grantPermission(
+export async function grantPermission<T extends ModuleName>(
     nc: NatsConnection,
     apiKey: string,
-    module: string,
-    action: string
-) {
+    module: T,
+    action: ActionForModule<T>
+): Promise<GrantResponse | ErrorResponse> {
     const sc = StringCodec();
     const response = await nc.request(
         'permissions.grant',
@@ -69,12 +103,12 @@ export async function grantPermission(
     return JSON.parse(sc.decode(response.data));
 }
 
-export async function revokePermission(
+export async function revokePermission<T extends ModuleName>(
     nc: NatsConnection,
     apiKey: string,
-    module: string,
-    action: string
-) {
+    module: T,
+    action: ActionForModule<T>
+): Promise<RevokeResponse | ErrorResponse> {
     const sc = StringCodec();
     const response = await nc.request(
         'permissions.revoke',
@@ -83,13 +117,12 @@ export async function revokePermission(
     return JSON.parse(sc.decode(response.data));
 }
 
-export async function checkPermission(
+export async function checkPermission<T extends ModuleName>(
     nc: NatsConnection,
     apiKey: string,
-    module: string,
-    action: string
-) {
-
+    module: T,
+    action: ActionForModule<T>
+): Promise<CheckResponse | ErrorResponse> {
     const sc = StringCodec();
 
     const response = await nc.request(
@@ -99,7 +132,10 @@ export async function checkPermission(
     return JSON.parse(sc.decode(response.data));
 }
 
-export async function listPermissions(nc: NatsConnection, apiKey: string) {
+export async function listPermissions(
+    nc: NatsConnection,
+    apiKey: string
+): Promise<ListResponse | ErrorResponse> {
 
     const sc = StringCodec();
     const response = await nc.request(

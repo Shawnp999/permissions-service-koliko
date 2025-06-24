@@ -1,3 +1,21 @@
+// permission schema
+export interface PermissionSchema {
+    TRADES: 'create' | 'create-manual';
+    INVENTORY: 'create' | 'read' | 'update' | 'delete';
+    USERS: 'create' | 'read' | 'update' | 'delete' | 'admin';
+    REPORTS: 'view' | 'export';
+}
+
+export type ModuleName = keyof PermissionSchema;
+export type ActionForModule<T extends ModuleName> = PermissionSchema[T];
+
+export type ValidPermission = {
+    [K in ModuleName]: {
+        module: K;
+        action: PermissionSchema[K];
+    }
+}[ModuleName];
+
 export enum ErrorCode {
     INVALID_PAYLOAD = 'invalid_payload',
     DB_ERROR = 'db_error',
@@ -6,42 +24,42 @@ export enum ErrorCode {
     INTERNAL_ERROR = 'internal_error',
 }
 
-export interface GrantRequest {
+export interface GrantRequest<T extends ModuleName = ModuleName> {
     apiKey: string;
-    module: string;
-    action: string;
+    module: T;
+    action: ActionForModule<T>;
 }
 
-export interface GrantResponse {
-    status: 'ok';
-}
-
-export interface RevokeRequest {
+export interface RevokeRequest<T extends ModuleName = ModuleName> {
     apiKey: string;
-    module: string;
-    action: string;
+    module: T;
+    action: ActionForModule<T>;
 }
 
-export interface RevokeResponse {
-    status: 'ok';
-}
-
-export interface CheckRequest {
+export interface CheckRequest<T extends ModuleName = ModuleName> {
     apiKey: string;
-    module: string;
-    action: string;
-}
-
-export interface CheckResponse {
-    allowed: boolean;
+    module: T;
+    action: ActionForModule<T>;
 }
 
 export interface ListRequest {
     apiKey: string;
 }
 
+export interface GrantResponse {
+    status: 'ok';
+}
+
+export interface RevokeResponse {
+    status: 'ok';
+}
+
+export interface CheckResponse {
+    allowed: boolean;
+}
+
 export interface ListResponse {
-    permissions: { module: string; action: string }[];
+    permissions: ValidPermission[];
 }
 
 export interface ErrorResponse {
@@ -54,4 +72,13 @@ export interface ErrorResponse {
 export interface Permission {
     module: string;
     action: string;
+}
+
+export type PermissionKey = `${ModuleName}:${string}`;
+
+// set for cache-optimized O(1) lookups
+export interface CachedPermissions {
+    permissionSet: Set<PermissionKey>;
+    permissions: ValidPermission[];
+    lastUpdated: number;
 }

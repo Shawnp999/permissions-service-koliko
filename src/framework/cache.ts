@@ -1,31 +1,82 @@
 import { StringCodec } from 'nats';
 import { logger } from './logger';
+import { PermissionKey, CachedPermissions, ValidPermission } from '../types';
 
-export async function updateCache(kv: any, sc: ReturnType<typeof StringCodec>, apiKey: string, permissions: { module: string; action: string }[]) {
+// helper function for O(1) lookups
+export function createPermissionKey(module: string, action: string): PermissionKey {
+    return `${module}:${action}` as PermissionKey;
+}
+
+function createOptimizedCache(permissions: { module: string; action: string }[]): CachedPermissions {
+    const permissionSet = new Set<PermissionKey>();
+    const validPermissions: ValidPermission[] = [];
+
+    for (const perm of permissions) {
+        const key = createPermissionKey(perm.module, perm.action);
+        permissionSet.add(key);
+        validPermissions.push(perm as ValidPermission);
+    }
+
+    return {
+        permissionSet,
+        permissions: validPermissions,
+        lastUpdated: Date.now()
+    };
+}
+
+// convert back to array for storage
+function serializeCacheForStorage(cachedPermissions: CachedPermissions): string {
+    return JSON.stringify({
+        permissions: cachedPermissions.permissions,
+        lastUpdated: cachedPermissions.lastUpdated
+    });
+}
+
+function deserializeCacheFromStorage(data: string): CachedPermissions {
+    const parsed = JSON.parse(data);
+    return createOptimizedCache(parsed.permissions);
+}
+
+export async function updateCache(
+    kv: any,
+    sc: ReturnType<typeof StringCodec>,
+    apiKey: string,
+    permissions: { module: string; action: string }[]
+): Promise<void> {
+
     try {
-        // conmvert permissions to string and cache
-        const dataToSave = JSON.stringify({ permissions });
+        const optimizedCache = createOptimizedCache(permissions);
+        const dataToSave = serializeCacheForStorage(optimizedCache);
+
         await kv.put(apiKey, sc.encode(dataToSave));
 
-        logger.info({ event: 'cache_updated', apiKey, permissions_count: permissions.length });
+        logger.info({
+            event: 'cache_updated',
+            apiKey,
+            permissions_count: permissions.length,
+            optimization: 'set_based_lookup'
+        });
     } catch (error) {
-        logger.error({ event: 'cache_update_error', apiKey, error: (error as Error).message });
+        logger.error({
+            event: 'cache_update_error',
+            apiKey,
+            error: (error as Error).message
+        });
         throw error;
     }
 }
 
-export async function getFromCache(kv: any, sc: ReturnType<typeof StringCodec>, apiKey: string): Promise<{ module: string; action: string }[] | null> {
-
+export async function getFromCache(
+    kv: any,
+    sc: ReturnType<typeof StringCodec>,
+    apiKey: string
+): Promise<CachedPermissions | null> {
     try {
-
         const entry = await kv.get(apiKey);
 
         if (entry) {
-            // if found in cache
             logger.info({ event: 'cache_hit', apiKey });
-
-            const data = JSON.parse(sc.decode(entry.value));
-            return data.permissions;
+            return deserializeCacheFromStorage(sc.decode(entry.value));
         }
 
         logger.info({ event: 'cache_miss', apiKey });
@@ -35,4 +86,18 @@ export async function getFromCache(kv: any, sc: ReturnType<typeof StringCodec>, 
         logger.error({ event: 'cache_get_error', apiKey, error: (error as Error).message });
         throw error;
     }
+}
+
+// O(1) permission check using Set
+export function hasPermissionInCache(
+    cachedPermissions: CachedPermissions,
+    module: string,
+    action: string
+): boolean {
+    const key = createPermissionKey(module, action);
+    return cachedPermissions.permissionSet.has(key);
+}
+
+export function getPermissionsArray(cachedPermissions: CachedPermissions): ValidPermission[] {
+    return cachedPermissions.permissions;
 }
