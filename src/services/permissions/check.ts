@@ -17,6 +17,7 @@ export async function handleCheck(data: CheckRequest, kv: any, sc: any): Promise
 
         if (!permissions) {
             const result = await pool.query('SELECT module, action FROM permissions WHERE api_key = $1', [data.apiKey]);
+
             permissions = result.rows;
             await updateCache(kv, sc, data.apiKey, permissions);
         }

@@ -89,7 +89,9 @@ export async function checkPermission(
     module: string,
     action: string
 ) {
+
     const sc = StringCodec();
+
     const response = await nc.request(
         'permissions.check',
         sc.encode(JSON.stringify({ apiKey, module, action }))
@@ -98,6 +100,7 @@ export async function checkPermission(
 }
 
 export async function listPermissions(nc: NatsConnection, apiKey: string) {
+
     const sc = StringCodec();
     const response = await nc.request(
         'permissions.list',

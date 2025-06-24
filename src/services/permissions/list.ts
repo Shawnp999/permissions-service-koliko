@@ -1,15 +1,15 @@
-import { getFromCache, updateCache } from '../../framework/cache';
-import { pool } from '../../framework/postgres';
-import { ListRequest, ListResponse, ErrorResponse, ErrorCode } from '../../types';
-import { logger } from '../../framework/logger';
+import {getFromCache, updateCache} from '../../framework/cache';
+import {pool} from '../../framework/postgres';
+import {ListRequest, ListResponse, ErrorResponse, ErrorCode} from '../../types';
+import {logger} from '../../framework/logger';
 
 export async function handleList(data: ListRequest, kv: any, sc: any): Promise<ListResponse | ErrorResponse> {
 
-    logger.info({ event: 'request_received', topic: 'permissions.list', data });
+    logger.info({event: 'request_received', topic: 'permissions.list', data});
 
     if (!data.apiKey) {
-        logger.error({ event: 'validation_error', topic: 'permissions.list', message: 'Missing apiKey' });
-        return { error: { code: ErrorCode.INVALID_PAYLOAD, message: 'Missing apiKey' } };
+        logger.error({event: 'validation_error', topic: 'permissions.list', message: 'Missing apiKey'});
+        return {error: {code: ErrorCode.INVALID_PAYLOAD, message: 'Missing apiKey'}};
     }
 
     try {
@@ -22,11 +22,11 @@ export async function handleList(data: ListRequest, kv: any, sc: any): Promise<L
             await updateCache(kv, sc, data.apiKey, permissions);
         }
 
-        logger.info({ event: 'response_sent', topic: 'permissions.list', response: { permissions } });
-        return { permissions };
+        logger.info({event: 'response_sent', topic: 'permissions.list', response: {permissions}});
+        return {permissions};
 
     } catch (error) {
-        logger.error({ event: 'service_error', operation: 'list', error: (error as Error).message });
-        return { error: { code: ErrorCode.CACHE_ERROR, message: 'Service error occurred' } };
+        logger.error({event: 'service_error', operation: 'list', error: (error as Error).message});
+        return {error: {code: ErrorCode.CACHE_ERROR, message: 'Service error occurred'}};
     }
 }
