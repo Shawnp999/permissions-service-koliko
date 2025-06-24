@@ -1,6 +1,6 @@
 import { getFromCache, updateCache } from '../../framework/cache';
 import { pool } from '../../framework/postgres';
-import { CheckRequest, CheckResponse, ErrorResponse } from '../../types';
+import { CheckRequest, CheckResponse, ErrorResponse, ErrorCode } from '../../types';
 import { logger } from '../../framework/logger';
 
 export async function handleCheck(data: CheckRequest, kv: any, sc: any): Promise<CheckResponse | ErrorResponse> {
@@ -9,7 +9,7 @@ export async function handleCheck(data: CheckRequest, kv: any, sc: any): Promise
 
     if (!data.apiKey || !data.module || !data.action) {
         logger.error({ event: 'validation_error', topic: 'permissions.check', message: 'Missing required fields' });
-        return { error: { code: 'invalid_payload', message: 'Missing required fields' } };
+        return { error: { code: ErrorCode.INVALID_PAYLOAD, message: 'Missing required fields' } };
     }
 
     try {
@@ -26,7 +26,7 @@ export async function handleCheck(data: CheckRequest, kv: any, sc: any): Promise
         return { allowed };
 
     } catch (error) {
-        logger.error({ event: 'cache_error', operation: 'check', error: (error as Error).message });
-        return { error: { code: 'cache_error', message: 'Cache or database error' } };
+        logger.error({ event: 'service_error', operation: 'check', error: (error as Error).message });
+        return { error: { code: ErrorCode.CACHE_ERROR, message: 'Service error occurred' } };
     }
 }

@@ -3,14 +3,14 @@ import { config } from './config';
 import { logger } from './logger';
 
 export async function createNatsConnection() {
+
     try {
         const nc = await connect({ servers: config.natsUrl });
         const sc = StringCodec();
 
-        // Get JetStream context
         const js = nc.jetstream();
 
-        // Try to get KV bucket - if it doesn't exist, we'll get an error
+        // try to get KV bucket
         try {
             const kv = await js.views.kv('permissions_cache');
             logger.info({ event: 'kv_bucket_connected', bucket: 'permissions_cache' });

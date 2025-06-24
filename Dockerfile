@@ -1,12 +1,10 @@
 FROM node:18-alpine
 
-# Install NATS CLI for bucket creation
 RUN wget https://github.com/nats-io/natscli/releases/download/v0.1.4/nats-0.1.4-linux-amd64.zip && \
     unzip nats-0.1.4-linux-amd64.zip && \
     mv nats-0.1.4-linux-amd64/nats /usr/local/bin/ && \
     rm -rf nats-0.1.4-linux-amd64*
 
-# Install PostgreSQL client for DB initialization
 RUN apk add --no-cache postgresql-client
 
 WORKDIR /app
@@ -17,7 +15,6 @@ RUN npm ci --only=production
 COPY . .
 RUN npm run build
 
-# Create startup script
 RUN echo '#!/bin/sh' > /app/start.sh && \
     echo 'echo "Waiting for services..."' >> /app/start.sh && \
     echo 'sleep 5' >> /app/start.sh && \

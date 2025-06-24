@@ -3,6 +3,7 @@ export enum ErrorCode {
     DB_ERROR = 'db_error',
     CACHE_ERROR = 'cache_error',
     API_KEY_NOT_FOUND = 'api_key_not_found',
+    INTERNAL_ERROR = 'internal_error',
 }
 
 export interface GrantRequest {
@@ -48,4 +49,9 @@ export interface ErrorResponse {
         code: ErrorCode;
         message: string;
     };
+}
+
+export interface Permission {
+    module: string;
+    action: string;
 }

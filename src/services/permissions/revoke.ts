@@ -1,6 +1,6 @@
 import { pool } from '../../framework/postgres';
 import { updateCache } from '../../framework/cache';
-import { RevokeRequest, RevokeResponse, ErrorResponse } from '../../types';
+import { RevokeRequest, RevokeResponse, ErrorResponse, ErrorCode } from '../../types';
 import { logger } from '../../framework/logger';
 
 export async function handleRevoke(data: RevokeRequest, kv: any, sc: any): Promise<RevokeResponse | ErrorResponse> {
@@ -9,7 +9,7 @@ export async function handleRevoke(data: RevokeRequest, kv: any, sc: any): Promi
 
     if (!data.apiKey || !data.module || !data.action) {
         logger.error({ event: 'validation_error', topic: 'permissions.revoke', message: 'Missing required fields' });
-        return { error: { code: 'invalid_payload', message: 'Missing required fields' } };
+        return { error: { code: ErrorCode.INVALID_PAYLOAD, message: 'Missing required fields' } };
     }
 
     try {
@@ -27,6 +27,6 @@ export async function handleRevoke(data: RevokeRequest, kv: any, sc: any): Promi
 
     } catch (error) {
         logger.error({ event: 'db_error', operation: 'revoke', error: (error as Error).message });
-        return { error: { code: 'db_error', message: 'Database error' } };
+        return { error: { code: ErrorCode.DB_ERROR, message: 'Database error' } };
     }
 }

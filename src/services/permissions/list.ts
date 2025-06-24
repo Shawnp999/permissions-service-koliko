@@ -1,6 +1,6 @@
 import { getFromCache, updateCache } from '../../framework/cache';
 import { pool } from '../../framework/postgres';
-import { ListRequest, ListResponse, ErrorResponse } from '../../types';
+import { ListRequest, ListResponse, ErrorResponse, ErrorCode } from '../../types';
 import { logger } from '../../framework/logger';
 
 export async function handleList(data: ListRequest, kv: any, sc: any): Promise<ListResponse | ErrorResponse> {
@@ -9,10 +9,11 @@ export async function handleList(data: ListRequest, kv: any, sc: any): Promise<L
 
     if (!data.apiKey) {
         logger.error({ event: 'validation_error', topic: 'permissions.list', message: 'Missing apiKey' });
-        return { error: { code: 'invalid_payload', message: 'Missing apiKey' } };
+        return { error: { code: ErrorCode.INVALID_PAYLOAD, message: 'Missing apiKey' } };
     }
 
     try {
+
         let permissions = await getFromCache(kv, sc, data.apiKey);
 
         if (!permissions) {
@@ -25,7 +26,7 @@ export async function handleList(data: ListRequest, kv: any, sc: any): Promise<L
         return { permissions };
 
     } catch (error) {
-        logger.error({ event: 'cache_error', operation: 'list', error: (error as Error).message });
-        return { error: { code: 'cache_error', message: 'Cache or database error' } };
+        logger.error({ event: 'service_error', operation: 'list', error: (error as Error).message });
+        return { error: { code: ErrorCode.CACHE_ERROR, message: 'Service error occurred' } };
     }
 }

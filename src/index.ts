@@ -5,12 +5,13 @@ import { handleCheck } from './services/permissions/check';
 import { handleList } from './services/permissions/list';
 import { logger } from './framework/logger';
 import { pool } from './framework/postgres';
+import { ErrorCode } from './types';
 
 let nc: any;
 
 async function startService() {
     try {
-        // Test database connection
+        // test db connection
         await pool.query('SELECT 1');
         logger.info({ event: 'database_connected' });
 
@@ -25,7 +26,12 @@ async function startService() {
                 msg.respond(sc.encode(JSON.stringify(result)));
             } catch (error) {
                 logger.error({ event: 'handler_error', topic: 'permissions.grant', error: (error as Error).message });
-                msg.respond(sc.encode(JSON.stringify({ error: { code: 'internal_error', message: 'Internal server error' } })));
+                msg.respond(sc.encode(JSON.stringify({
+                    error: {
+                        code: ErrorCode.INTERNAL_ERROR,
+                        message: 'Internal server error'
+                    }
+                })));
             }
         });
 
@@ -37,7 +43,12 @@ async function startService() {
                 msg.respond(sc.encode(JSON.stringify(result)));
             } catch (error) {
                 logger.error({ event: 'handler_error', topic: 'permissions.revoke', error: (error as Error).message });
-                msg.respond(sc.encode(JSON.stringify({ error: { code: 'internal_error', message: 'Internal server error' } })));
+                msg.respond(sc.encode(JSON.stringify({
+                    error: {
+                        code: ErrorCode.INTERNAL_ERROR,
+                        message: 'Internal server error'
+                    }
+                })));
             }
         });
 
@@ -49,7 +60,12 @@ async function startService() {
                 msg.respond(sc.encode(JSON.stringify(result)));
             } catch (error) {
                 logger.error({ event: 'handler_error', topic: 'permissions.check', error: (error as Error).message });
-                msg.respond(sc.encode(JSON.stringify({ error: { code: 'internal_error', message: 'Internal server error' } })));
+                msg.respond(sc.encode(JSON.stringify({
+                    error: {
+                        code: ErrorCode.INTERNAL_ERROR,
+                        message: 'Internal server error'
+                    }
+                })));
             }
         });
 
@@ -61,7 +77,12 @@ async function startService() {
                 msg.respond(sc.encode(JSON.stringify(result)));
             } catch (error) {
                 logger.error({ event: 'handler_error', topic: 'permissions.list', error: (error as Error).message });
-                msg.respond(sc.encode(JSON.stringify({ error: { code: 'internal_error', message: 'Internal server error' } })));
+                msg.respond(sc.encode(JSON.stringify({
+                    error: {
+                        code: ErrorCode.INTERNAL_ERROR,
+                        message: 'Internal server error'
+                    }
+                })));
             }
         });
 
@@ -73,7 +94,6 @@ async function startService() {
     }
 }
 
-// Graceful shutdown
 async function shutdown() {
     logger.info({ event: 'shutdown_initiated' });
 
@@ -94,7 +114,6 @@ async function shutdown() {
     process.exit(0);
 }
 
-// Handle shutdown signals
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 process.on('uncaughtException', (error) => {

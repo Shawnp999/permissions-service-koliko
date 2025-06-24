@@ -1,7 +1,7 @@
 import { StringCodec } from 'nats';
 import { logger } from './logger';
 
-export async function updateCache(kv: any, sc: StringCodec, apiKey: string, permissions: { module: string; action: string }[]) {
+export async function updateCache(kv: any, sc: ReturnType<typeof StringCodec>, apiKey: string, permissions: { module: string; action: string }[]) {
     try {
         await kv.put(apiKey, sc.encode(JSON.stringify({ permissions })));
         logger.info({ event: 'cache_updated', apiKey, permissions_count: permissions.length });
@@ -11,7 +11,7 @@ export async function updateCache(kv: any, sc: StringCodec, apiKey: string, perm
     }
 }
 
-export async function getFromCache(kv: any, sc: StringCodec, apiKey: string): Promise<{ module: string; action: string }[] | null> {
+export async function getFromCache(kv: any, sc: ReturnType<typeof StringCodec>, apiKey: string): Promise<{ module: string; action: string }[] | null> {
     try {
         const entry = await kv.get(apiKey);
         if (entry) {
