@@ -1,6 +1,6 @@
 import { pool } from '../../framework/postgres';
 import { updateCache } from '../../framework/cache';
-import { GrantRequest, GrantResponse, ErrorResponse } from '../../types';
+import { GrantRequest, GrantResponse, ErrorResponse, ErrorCode } from '../../types';
 import { logger } from '../../framework/logger';
 
 export async function handleGrant(data: GrantRequest, kv: any, sc: any): Promise<GrantResponse | ErrorResponse> {
@@ -9,7 +9,7 @@ export async function handleGrant(data: GrantRequest, kv: any, sc: any): Promise
 
     if (!data.apiKey || !data.module || !data.action) {
         logger.error({ event: 'validation_error', topic: 'permissions.grant', message: 'Missing required fields' });
-        return { error: { code: 'invalid_payload', message: 'Missing required fields' } };
+        return { error: { code: ErrorCode.INVALID_PAYLOAD, message: 'Missing required fields' } };
     }
 
     try {
@@ -27,6 +27,6 @@ export async function handleGrant(data: GrantRequest, kv: any, sc: any): Promise
 
     } catch (error) {
         logger.error({ event: 'db_error', operation: 'grant', error: (error as Error).message });
-        return { error: { code: 'db_error', message: 'Database error' } };
+        return { error: { code: ErrorCode.DB_ERROR, message: 'Database error' } };
     }
 }
