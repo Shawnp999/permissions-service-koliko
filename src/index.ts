@@ -10,17 +10,18 @@ import { NatsConnection, StringCodec, KV } from 'nats';
 
 let nc: NatsConnection;
 
+//refactor with correct types
+
 async function startService(): Promise<void> {
     try {
-        // Test database connection
+        // test DB connection
         await pool.query('SELECT 1');
         logger.info({ event: 'database_connected' });
 
-        // Connect to NATS and get KV bucket
+        // connect to NATS and get KV bucket
         const { nc: natsConnection, sc, kv } = await createNatsConnection();
         nc = natsConnection;
 
-        // Start message handlers
         await Promise.all([
             handleGrantMessages(nc, sc, kv),
             handleRevokeMessages(nc, sc, kv),
@@ -40,6 +41,7 @@ async function startService(): Promise<void> {
 }
 
 async function handleGrantMessages(nc: NatsConnection, sc: ReturnType<typeof StringCodec>, kv: KV): Promise<void> {
+
     const sub = nc.subscribe('permissions.grant', { queue: 'permissions' });
 
     for await (const msg of sub) {
@@ -63,6 +65,7 @@ async function handleGrantMessages(nc: NatsConnection, sc: ReturnType<typeof Str
 }
 
 async function handleRevokeMessages(nc: NatsConnection, sc: ReturnType<typeof StringCodec>, kv: KV): Promise<void> {
+
     const sub = nc.subscribe('permissions.revoke', { queue: 'permissions' });
 
     for await (const msg of sub) {
@@ -86,6 +89,7 @@ async function handleRevokeMessages(nc: NatsConnection, sc: ReturnType<typeof St
 }
 
 async function handleCheckMessages(nc: NatsConnection, sc: ReturnType<typeof StringCodec>, kv: KV): Promise<void> {
+
     const sub = nc.subscribe('permissions.check', { queue: 'permissions' });
 
     for await (const msg of sub) {
@@ -109,6 +113,7 @@ async function handleCheckMessages(nc: NatsConnection, sc: ReturnType<typeof Str
 }
 
 async function handleListMessages(nc: NatsConnection, sc: ReturnType<typeof StringCodec>, kv: KV): Promise<void> {
+
     const sub = nc.subscribe('permissions.list', { queue: 'permissions' });
 
     for await (const msg of sub) {
@@ -151,7 +156,6 @@ async function shutdown(): Promise<void> {
     process.exit(0);
 }
 
-// Signal handlers
 process.on('SIGINT', () => void shutdown());
 process.on('SIGTERM', () => void shutdown());
 
@@ -165,5 +169,4 @@ process.on('unhandledRejection', (reason, promise) => {
     void shutdown();
 });
 
-// Start the service
 void startService();
