@@ -24,6 +24,7 @@ export enum ErrorCode {
     INTERNAL_ERROR = 'internal_error',
 }
 
+// Request types
 export interface GrantRequest<T extends ModuleName = ModuleName> {
     apiKey: string;
     module: T;
@@ -46,6 +47,7 @@ export interface ListRequest {
     apiKey: string;
 }
 
+// Response types
 export interface GrantResponse {
     status: 'ok';
 }
@@ -69,14 +71,9 @@ export interface ErrorResponse {
     };
 }
 
-export interface Permission {
-    module: string;
-    action: string;
-}
+// Cache types for O(1) lookups
+export type PermissionKey = `${string}:${string}`;
 
-export type PermissionKey = `${ModuleName}:${string}`;
-
-// set for cache-optimized O(1) lookups
 export interface CachedPermissions {
     permissionSet: Set<PermissionKey>;
     permissions: ValidPermission[];

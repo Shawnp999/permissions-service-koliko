@@ -2,22 +2,10 @@ import { connect, NatsConnection, StringCodec } from 'nats';
 
 // re-export all types for external use
 export * from '../types';
-export type {
-    ModuleName,
-    ActionForModule,
-    ValidPermission,
-    PermissionSchema,
-    PermissionKey,
-    CachedPermissions
-} from '../types';
 
 import {
     ModuleName,
     ActionForModule,
-    GrantRequest,
-    RevokeRequest,
-    CheckRequest,
-    ListRequest,
     GrantResponse,
     RevokeResponse,
     CheckResponse,
@@ -39,12 +27,13 @@ export class PermissionsClient {
         return new PermissionsClient(nc);
     }
 
-    // all methods are not type safe
+
     async grant<T extends ModuleName>(
         apiKey: string,
         module: T,
         action: ActionForModule<T>
     ): Promise<GrantResponse | ErrorResponse> {
+
         const response = await this.nc.request(
             'permissions.grant',
             this.sc.encode(JSON.stringify({ apiKey, module, action }))
@@ -89,6 +78,7 @@ export class PermissionsClient {
     }
 }
 
+// Simple helper functions
 export async function grantPermission<T extends ModuleName>(
     nc: NatsConnection,
     apiKey: string,
