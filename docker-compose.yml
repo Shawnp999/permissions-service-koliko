@@ -24,12 +24,7 @@ services:
       - '4222:4222'
       - '8222:8222'
     command: ['-js', '-m', '8222']
-    healthcheck:
-      test: ["CMD", "nats", "server", "info", "--server=nats://localhost:4222"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+    #without health check CLI
 
   permissions-service:
     build: .
@@ -43,8 +38,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      # check
       nats:
-        condition: service_healthy
+        condition: service_started
     restart: unless-stopped
 
 volumes:
