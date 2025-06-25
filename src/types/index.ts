@@ -1,9 +1,9 @@
 // permission schema
 export interface PermissionSchema {
-    TRADES: 'create' | 'create-manual';
-    INVENTORY: 'create' | 'read' | 'update' | 'delete';
-    USERS: 'create' | 'read' | 'update' | 'delete' | 'admin';
-    REPORTS: 'view' | 'export';
+    trades: 'create' | 'create_manual';
+    inventory: 'create' | 'read' | 'update' | 'delete';
+    users: 'create' | 'read' | 'update' | 'delete' | 'admin';
+    reports: 'view' | 'export';
 }
 
 export type ModuleName = keyof PermissionSchema;
