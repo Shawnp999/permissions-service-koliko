@@ -9,12 +9,8 @@ A microservice for managing API key permissions using NATS RPC and PostgreSQL.
    docker-compose up -d
    ```
 
-2. **Create NATS KV bucket** (one time only)
-   ```bash
-   docker run --rm --network permissions-service-koliko_default nats:2 nats kv add permissions_cache --server=nats://nats:4222
-   ```
 
-3. **Test the service**
+2. **Test the service**
    ```bash
    node test.js
    ```
